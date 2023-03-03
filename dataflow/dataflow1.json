@@ -1,0 +1,63 @@
+{
+	"name": "dataflow1",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "DelimitedText2",
+						"type": "DatasetReference"
+					},
+					"name": "source1"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "DelimitedText3",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "derivedColumn1"
+				},
+				{
+					"name": "filter1"
+				},
+				{
+					"name": "aggregate1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          Sno as string,",
+				"          Date as string,",
+				"          {State/UnionTerritory} as string,",
+				"          ConfirmedIndianNational as string,",
+				"          ConfirmedForeignNational as string,",
+				"          Cured as string,",
+				"          Deaths as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> source1",
+				"source1 derive(ConfirmedIndianNational = toInteger(ConfirmedIndianNational),",
+				"          ConfirmedForeignNational = toInteger(ConfirmedForeignNational),",
+				"          Cured = toInteger(Cured),",
+				"          Deaths = toInteger(Deaths)) ~> derivedColumn1",
+				"derivedColumn1 filter(toInteger(ConfirmedIndianNational) >0\r",
+				") ~> filter1",
+				"filter1 aggregate(groupBy({State/UnionTerritory}),",
+				"     ConfirmedIndianNational = sum(ConfirmedIndianNational)) ~> aggregate1",
+				"aggregate1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> sink1"
+			]
+		}
+	}
+}
